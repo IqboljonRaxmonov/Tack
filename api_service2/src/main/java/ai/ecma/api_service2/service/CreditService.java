@@ -22,7 +22,6 @@ import org.springframework.web.client.RestTemplate;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.sql.Date;
-import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +35,7 @@ public class CreditService {
     @Autowired
     CreditInfoRepository creditInfoRepository;
 
-    public ApiResponse getCredit(HttpServletRequest httpServletRequest, RequestDto requestDto) throws ParseException {
+    public ApiResponse getCredit(HttpServletRequest httpServletRequest, RequestDto requestDto){
         RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder();
         restTemplateBuilder.errorHandler(new ResponseErrorHandler() {
             String httpStatus = "";
@@ -57,15 +56,11 @@ public class CreditService {
         ResponseEntity<UUID> response = null;
         try {
             response = restTemplate.exchange(url, HttpMethod.GET, request, UUID.class);
-
+            if (!response.hasBody())
+                return new ApiResponse("User not found", false, null);
         } catch (HttpClientErrorException e) {
                 return new ApiResponse("No authorization for you", false);
         }
-
-        if (!response.hasBody())
-            return new ApiResponse("User not found", false, null);
-        if (response.getStatusCode().value() == 403)
-            return new ApiResponse("No authorization for you", false, null);
 
         double annualSalary = requestDto.getSalary() * 12;
         double actualAnnualSalary = annualSalary - annualSalary * 0.3;
