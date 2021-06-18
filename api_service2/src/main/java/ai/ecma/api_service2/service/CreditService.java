@@ -8,19 +8,15 @@ import ai.ecma.api_service2.payload.RequestDto;
 import ai.ecma.api_service2.repository.CreditInfoRepository;
 import ai.ecma.api_service2.repository.CreditRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -35,22 +31,8 @@ public class CreditService {
     @Autowired
     CreditInfoRepository creditInfoRepository;
 
-    public ApiResponse getCredit(HttpServletRequest httpServletRequest, RequestDto requestDto){
-        RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder();
-        restTemplateBuilder.errorHandler(new ResponseErrorHandler() {
-            String httpStatus = "";
-
-            @Override
-            public boolean hasError(ClientHttpResponse clientHttpResponse) throws IOException {
-                return clientHttpResponse.getStatusCode().value() != 403;
-            }
-
-            @Override
-            public void handleError(ClientHttpResponse clientHttpResponse) throws IOException {
-                httpStatus += clientHttpResponse.getStatusText();
-            }
-        });
-        RestTemplate restTemplate = restTemplateBuilder.build();
+    public ApiResponse getCredit(HttpServletRequest httpServletRequest, RequestDto requestDto) {
+        RestTemplate restTemplate = new RestTemplate();
         String url = makeUrlWithParams("http://localhost/api/user/getUserId?", requestDto);
         HttpEntity request = getHttpRequest(httpServletRequest);
         ResponseEntity<UUID> response = null;
@@ -59,7 +41,7 @@ public class CreditService {
             if (!response.hasBody())
                 return new ApiResponse("User not found", false, null);
         } catch (HttpClientErrorException e) {
-                return new ApiResponse("No authorization for you", false);
+            return new ApiResponse("No authorization for you", false);
         }
 
         double annualSalary = requestDto.getSalary() * 12;
